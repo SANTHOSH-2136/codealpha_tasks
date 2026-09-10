@@ -1,0 +1,163 @@
+import csv
+from datetime import datetime
+
+# Hardcoded stock prices (in USD)
+STOCK_PRICES = {
+    "AAPL": 180,
+    "TSLA": 250,
+    "GOOGL": 140,
+    "AMZN": 145,
+    "MSFT": 410,
+    "NFLX": 670,
+    "META": 480,
+}
+
+
+def display_available_stocks():
+    print("Available stocks and prices:")
+    for symbol, price in STOCK_PRICES.items():
+        print("  " + symbol + ": $" + str(price))
+    print()
+
+
+def get_stock_symbol():
+    while True:
+        symbol = input("Enter stock symbol (or 'done' to finish): ").upper().strip()
+
+        if symbol == "DONE":
+            return symbol
+
+        if symbol not in STOCK_PRICES:
+            print("Sorry, '" + symbol + "' is not in our price list. Please choose from the list above.\n")
+            continue
+
+        return symbol
+
+
+def get_quantity(symbol):
+    while True:
+        qty_input = input("Enter quantity of " + symbol + " shares: ").strip()
+
+        try:
+            quantity = int(qty_input)
+            if quantity <= 0:
+                print("Quantity must be a positive number.\n")
+                continue
+            return quantity
+        except ValueError:
+            print("Please enter a valid whole number.\n")
+
+
+def build_portfolio():
+    portfolio = {}  # symbol -> total quantity
+
+    print("=" * 45)
+    print("Welcome to the Stock Portfolio Tracker!")
+    print("=" * 45)
+    print()
+    display_available_stocks()
+
+    while True:
+        symbol = get_stock_symbol()
+
+        if symbol == "DONE":
+            break
+
+        quantity = get_quantity(symbol)
+
+        # If stock already added, add to existing quantity
+        if symbol in portfolio:
+            portfolio[symbol] += quantity
+        else:
+            portfolio[symbol] = quantity
+
+        print("Added " + str(quantity) + " shares of " + symbol + ".\n")
+
+    return portfolio
+
+
+def calculate_and_display_summary(portfolio):
+    if not portfolio:
+        print("\nNo stocks were added. Nothing to summarize.")
+        return None
+
+    print("\n" + "=" * 45)
+    print("PORTFOLIO SUMMARY")
+    print("=" * 45)
+    print("{:<10}{:<10}{:<12}{:<12}".format("Symbol", "Qty", "Price", "Value"))
+    print("-" * 45)
+
+    total_investment = 0
+    summary_rows = []
+
+    for symbol, quantity in portfolio.items():
+        price = STOCK_PRICES[symbol]
+        value = price * quantity
+        total_investment += value
+
+        print("{:<10}{:<10}{:<12}{:<12}".format(
+            symbol, quantity, "$" + str(price), "$" + str(value)
+        ))
+
+        summary_rows.append({
+            "symbol": symbol,
+            "quantity": quantity,
+            "price": price,
+            "value": value,
+        })
+
+    print("-" * 45)
+    print("TOTAL INVESTMENT VALUE: $" + str(total_investment))
+    print("=" * 45)
+
+    return {"rows": summary_rows, "total": total_investment}
+
+
+def save_to_file(summary):
+    if summary is None:
+        return
+
+    choice = input("\nWould you like to save this summary to a file? (y/n): ").lower().strip()
+    if choice != "y":
+        return
+
+    file_format = input("Save as (1) .txt or (2) .csv? Enter 1 or 2: ").strip()
+
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+    if file_format == "2":
+        filename = "portfolio_" + timestamp + ".csv"
+        with open(filename, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["Symbol", "Quantity", "Price", "Value"])
+            for row in summary["rows"]:
+                writer.writerow([row["symbol"], row["quantity"], row["price"], row["value"]])
+            writer.writerow([])
+            writer.writerow(["Total Investment", "", "", summary["total"]])
+        print("Saved to " + filename)
+
+    else:
+        filename = "portfolio_" + timestamp + ".txt"
+        with open(filename, "w") as f:
+            f.write("PORTFOLIO SUMMARY\n")
+            f.write("=" * 45 + "\n")
+            f.write("{:<10}{:<10}{:<12}{:<12}\n".format("Symbol", "Qty", "Price", "Value"))
+            f.write("-" * 45 + "\n")
+            for row in summary["rows"]:
+                f.write("{:<10}{:<10}{:<12}{:<12}\n".format(
+                    row["symbol"], row["quantity"], "$" + str(row["price"]), "$" + str(row["value"])
+                ))
+            f.write("-" * 45 + "\n")
+            f.write("TOTAL INVESTMENT VALUE: $" + str(summary["total"]) + "\n")
+        print("Saved to " + filename)
+
+
+def main():
+    portfolio = build_portfolio()
+    summary = calculate_and_display_summary(portfolio)
+    save_to_file(summary)
+    print("\nThanks for using the Stock Portfolio Tracker!")
+
+
+if __name__ == "__main__":
+    main()
