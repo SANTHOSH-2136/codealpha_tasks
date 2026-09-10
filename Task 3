@@ -1,0 +1,81 @@
+
+
+import os
+import re
+
+
+def find_input_file():
+    """Ask the user for a .txt file path, with basic validation."""
+    while True:
+        file_path = input("Enter the path to the .txt file to scan: ").strip()
+
+        if not file_path:
+            print("Please enter a file path.\n")
+            continue
+
+        if not os.path.isfile(file_path):
+            print("That file doesn't exist. Please check the path and try again.\n")
+            continue
+
+        if not file_path.lower().endswith(".txt"):
+            print("Warning: that file doesn't end in .txt — trying to read it anyway.\n")
+
+        return file_path
+
+
+def extract_emails(text):
+    """Find all email addresses in a block of text using regex."""
+    # Matches typical emails: local-part@domain.tld
+    email_pattern = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+    found = re.findall(email_pattern, text)
+
+    # Remove duplicates while preserving order, and normalize case for comparison
+    seen = set()
+    unique_emails = []
+    for email in found:
+        key = email.lower()
+        if key not in seen:
+            seen.add(key)
+            unique_emails.append(email)
+
+    return unique_emails
+
+
+def save_emails(emails, source_file):
+    base_name = os.path.splitext(os.path.basename(source_file))[0]
+    output_file = base_name + "_emails.txt"
+
+    with open(output_file, "w") as f:
+        for email in emails:
+            f.write(email + "\n")
+
+    return output_file
+
+
+def main():
+    print("=" * 45)
+    print("Email Address Extractor")
+    print("=" * 45)
+    print()
+
+    input_file = find_input_file()
+
+    with open(input_file, "r", errors="ignore") as f:
+        text = f.read()
+
+    emails = extract_emails(text)
+
+    if not emails:
+        print("\nNo email addresses were found in '" + input_file + "'.")
+        return
+
+    print("\nFound " + str(len(emails)) + " unique email address(es):")
+    for email in emails:
+        print("  - " + email)
+
+    output_file = save_emails(emails, input_file)
+    print("\nSaved all email addresses to '" + output_file + "'.")
+
+
+if __name__ == "__main__":
+    main()
