@@ -1,0 +1,81 @@
+
+
+import random
+
+# Each key maps to a list of trigger words/phrases to look for in the user's input,
+# and a list of possible responses to pick from randomly.
+RULES = {
+    "greeting": {
+        "triggers": ["hello", "hi", "hey", "good morning", "good afternoon", "good evening"],
+        "responses": ["Hi!", "Hello there!", "Hey! Good to see you."],
+    },
+    "how_are_you": {
+        "triggers": ["how are you", "how're you", "how you doing", "how are u"],
+        "responses": ["I'm fine, thanks!", "Doing great, thanks for asking!", "I'm just a bot, but I'm doing well!"],
+    },
+    "name": {
+        "triggers": ["your name", "who are you"],
+        "responses": ["I'm a simple rule-based chatbot.", "You can call me ChatBot."],
+    },
+    "thanks": {
+        "triggers": ["thank you", "thanks", "appreciate it"],
+        "responses": ["You're welcome!", "No problem at all!", "Anytime!"],
+    },
+    "help": {
+        "triggers": ["help", "what can you do"],
+        "responses": ["I can chat about basic things like greetings, how you're doing, and say goodbye. Try saying 'hello' or 'bye'!"],
+    },
+    "bye": {
+        "triggers": ["bye", "goodbye", "see you", "exit", "quit"],
+        "responses": ["Goodbye!", "See you later!", "Take care, bye!"],
+    },
+}
+
+FALLBACK_RESPONSES = [
+    "Sorry, I didn't understand that. Could you rephrase?",
+    "I'm not sure how to respond to that yet.",
+    "Hmm, I don't know about that. Try saying 'help' to see what I can do.",
+]
+
+EXIT_KEYWORDS = RULES["bye"]["triggers"]
+
+
+def get_response(user_input):
+    """Check the user's input against known rules and return a matching response."""
+    text = user_input.lower().strip()
+
+    for category in RULES.values():
+        for trigger in category["triggers"]:
+            if trigger in text:
+                return random.choice(category["responses"])
+
+    return random.choice(FALLBACK_RESPONSES)
+
+
+def is_exit_command(user_input):
+    text = user_input.lower().strip()
+    return any(keyword in text for keyword in EXIT_KEYWORDS)
+
+
+def chat():
+    print("=" * 45)
+    print("Simple ChatBot")
+    print("=" * 45)
+    print("Type 'bye' anytime to end the conversation.\n")
+
+    while True:
+        user_input = input("You: ").strip()
+
+        if not user_input:
+            print("Bot: Please say something!\n")
+            continue
+
+        response = get_response(user_input)
+        print("Bot: " + response + "\n")
+
+        if is_exit_command(user_input):
+            break
+
+
+if __name__ == "__main__":
+    chat()
